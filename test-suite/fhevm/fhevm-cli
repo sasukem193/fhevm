@@ -19,7 +19,7 @@ PROJECT="fhevm"
 
 export GATEWAY_VERSION=${GATEWAY_VERSION:-"v0.7.0-rc1"}
 export HOST_VERSION=${HOST_VERSION:-"v0.7.0-rc2"}
-export COPROCESSOR_VERSION=${COPROCESSOR_VERSION:-"v0.7.0-rc1"}
+export COPROCESSOR_VERSION=${COPROCESSOR_VERSION:-"f290400"}
 export DB_MIGRATION_VERSION=${DB_MIGRATION_VERSION:-"v0.7.0-rc1"}
 export CONNECTOR_VERSION=${CONNECTOR_VERSION:-"v0.7.0-rc1"}
 export TEST_SUITE_VERSION=${TEST_SUITE_VERSION:-"a45484d"}
@@ -183,6 +183,42 @@ case $COMMAND in
         random)
           log_message="${LIGHT_BLUE}${BOLD}[TEST] RANDOM OPERATORS${RESET}"
           docker_args+=("-g" "generate and decrypt|generating rand in reverting sub-call|upper bound and decrypt")
+          ;;
+        fhevm-listener-disconnect-erc)
+          log_message="${LIGHT_BLUE}${BOLD}[TEST] DISCONNECT${RESET}"
+          docker_args+=("-g" "should transfer tokens between two users.")
+          echo -e "${YELLOW}${BOLD}[SIMULATING] Disconnect fhevm-listener${RESET}"
+          docker network disconnect fhevm_default fhevm-fhevm-listener || echo "Was already disconnected"
+          docker exec fhevm-test-suite-e2e-debug "${docker_args[@]}" &
+          sleep 45
+          echo -e "${YELLOW}${BOLD}[SIMULATING] Reconnect fhevm-listener${RESET}"
+          docker network connect fhevm_default fhevm-fhevm-listener
+          wait
+          exit 0
+          ;;
+        fhevm-listener-disconnect-input-proof)
+          log_message="${LIGHT_BLUE}${BOLD}[TEST] DISCONNECT${RESET}"
+          docker_args+=("-g" "test user input uint64")
+          timestamp=$(date +%s)
+          docker logs fhevm-fhevm-listener > FULLLOGS
+          FIRSTLINE=$(wc -l FULLLOGS)
+          echo -e "${YELLOW}${BOLD}[SIMULATING] Disconnect fhevm-listener${RESET}"
+          docker network disconnect fhevm_default fhevm-fhevm-listener || echo "Was already disconnected"
+          docker exec fhevm-test-suite-e2e-debug "${docker_args[@]}"
+          docker exec fhevm-test-suite-e2e-debug "${docker_args[@]}"
+          sleep 60
+          echo -e "${YELLOW}${BOLD}[SIMULATING] Reconnect fhevm-listener${RESET}"
+          docker network connect fhevm_default fhevm-fhevm-listener
+          docker exec fhevm-test-suite-e2e-debug "${docker_args[@]}"
+          docker logs fhevm-fhevm-listener > FULLLOGS
+          tail -n+${FIRSTLINE} FULLLOGS > LOGS
+          echo Test logs
+          cat LOGS
+          echo "Allowed handles"
+          grep -A 3 "Allowed {" LOGS | grep handle | sort -u
+          test $(grep -A 3 "Allowed {" LOGS | grep handle | sort -u | wc -l) -ge 3
+          test $(grep -A 3 "Allowed {" LOGS | grep handle | sort -u | wc -l) -le 6
+          exit 0
           ;;
         debug)
           echo -e "${LIGHT_BLUE}${BOLD}[DEBUG] Starting debug session...${RESET}"
