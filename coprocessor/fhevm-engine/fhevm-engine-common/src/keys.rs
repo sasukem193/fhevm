@@ -17,8 +17,12 @@ use tfhe::{
 
 use crate::utils::{safe_deserialize_key, safe_serialize_key};
 
+#[cfg(not(feature = "gpu"))]
 pub const TFHE_COMPRESSION_PARAMS: CompressionParameters =
     V1_0_COMP_PARAM_MESSAGE_2_CARRY_2_KS_PBS_TUNIFORM_2M128;
+#[cfg(feature = "gpu")]
+pub const TFHE_COMPRESSION_PARAMS: CompressionParameters =
+    tfhe::shortint::parameters::COMP_PARAM_GPU_MULTI_BIT_GROUP_4_MESSAGE_2_CARRY_2_KS_PBS;
 pub const TFHE_COMPACT_PK_ENCRYPTION_PARAMS: CompactPublicKeyEncryptionParameters =
     V1_0_PARAM_PKE_MESSAGE_2_CARRY_2_KS_PBS_TUNIFORM_2M128;
 pub const TFHE_KS_PARAMS: ShortintKeySwitchingParameters =
