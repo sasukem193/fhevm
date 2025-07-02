@@ -4,7 +4,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use tokio::sync::RwLock;
 
 use fhevm_engine_common::healthz_server::{
-    default_get_version, HealthCheckService, HealthStatus, Version
+    default_get_version, HealthCheckService, HealthStatus, Version,
 };
 use fhevm_engine_common::types::BlockchainProvider;
 

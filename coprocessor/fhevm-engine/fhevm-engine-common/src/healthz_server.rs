@@ -221,3 +221,33 @@ impl HealthStatus {
             .join("; ")
     }
 }
+
+#[cfg(test)]
+pub async fn wait_url_success(url: &str, retry: u64, delay: u64) {
+    let healthz_url = format!("{}/healthz", url);
+    for step in 0..=retry {
+        let response = reqwest::get(&url).await;
+        if response.is_ok() && response.as_ref().unwrap().status().is_success() {
+            eprintln!("Listener healthy after {} seconds", step * delay);
+            return;
+        }
+        tokio::time::sleep(tokio::time::Duration::from_secs(delay)).await;
+    }
+    assert!(
+        false,
+        "Listener did not become healthy after {} retries",
+        retry
+    );
+}
+
+#[cfg(test)]
+pub async fn wait_alive(url: &str, retry: u64, delay: u64) {
+    let alive_url = format!("{}/healthz", url);
+    wait_url_success(&alive_url, retry, delay).await;
+}
+
+#[cfg(test)]
+pub async fn wait_healthy(url: &str, retry: u64, delay: u64) {
+    let healthz_url = format!("{}/healthz", url);
+    wait_url_success(&healthz_url, retry, delay).await;
+}

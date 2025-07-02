@@ -2,6 +2,7 @@ use alloy::network::EthereumWallet;
 use alloy::node_bindings::Anvil;
 use alloy::signers::local::PrivateKeySigner;
 use alloy::sol;
+use fhevm_engine_common::healthz_server::{wait_alive, wait_healthy};
 use futures_util::future::try_join_all;
 use std::sync::atomic::AtomicU32;
 use std::sync::atomic::Ordering;
@@ -167,15 +168,7 @@ async fn test_listener_restart() -> Result<(), anyhow::Error> {
     // Start listener in background task
     let listener_handle = tokio::spawn(main(args.clone()));
 
-    for delay in 0..60 {
-        const HEALTHZ_URL: &str = "http://127.0.0.1:8082/healthz";
-        let response = reqwest::get(HEALTHZ_URL).await;
-        if response.is_ok() && response.unwrap().status().is_success() {
-            eprintln!("Listener healthy after {} seconds", delay);
-            break;
-        }
-        tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
-    }
+    wait_healthy("http://127.0.0.1:8082", 60, 1);
 
     // Emit first batch of events
     let wallets_clone = wallets.clone();
@@ -307,24 +300,9 @@ async fn test_health() -> Result<(), anyhow::Error> {
     // Start listener in background task
     let listener_handle: tokio::task::JoinHandle<()> =
         tokio::spawn(main(args.clone()));
-    for _ in 1..10 {
-        let response = reqwest::get(LIVENESS_URL).await;
-        if response.is_ok() && response.unwrap().status().is_success() {
-            break;
-        }
-        tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
-    }
-    let response = reqwest::get(LIVENESS_URL).await;
-    assert!(response.is_ok());
-    assert!(response.unwrap().status().is_success());
-    let response = reqwest::get(HEALTHZ_URL).await;
-    let Ok(response) = response else {
-        return Err(anyhow::anyhow!("Failed to get healthz"));
-    };
-    if !response.status().is_success() {
-        eprintln!("response: {:?}", response.text().await);
-        return Err(anyhow::anyhow!("Failed to get healthz"));
-    }
+    wait_alive("http://127.0.0.1:8083", 60, 1);
+    wait_healthy("http://127.0.0.1:8083", 60, 1);
+
     anvil.child_mut().kill().unwrap();
     tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
     let response = reqwest::get(HEALTHZ_URL).await;

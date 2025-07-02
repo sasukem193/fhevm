@@ -40,7 +40,8 @@ opentelemetry-otlp = { workspace = true }
 opentelemetry_sdk = { workspace = true }
 opentelemetry-semantic-conventions = { workspace = true }
 
-
+[dev-dependencies]
+reqwest = "0.12.20"
 
 [features]
 nightly-avx512 = ["tfhe/nightly-avx512"]
