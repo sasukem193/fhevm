@@ -113,9 +113,8 @@ contract CiphertextCommits is
 
         // Compute the hash of the ciphertext material to differentiate different ciphertext
         // material additions
-        bytes32 addCiphertextHash = keccak256(
-            abi.encode(ctHandle, chainId, keyId, ciphertextDigest, snsCiphertextDigest)
-        );
+        // Note that chainId is not included in the hash because it is already contained in the ctHandle.
+        bytes32 addCiphertextHash = keccak256(abi.encode(ctHandle, keyId, ciphertextDigest, snsCiphertextDigest));
 
         CiphertextCommitsStorage storage $ = _getCiphertextCommitsStorage();
 
@@ -139,11 +138,7 @@ contract CiphertextCommits is
         // Only accept coprocessor transaction senders from the same context
         COPROCESSOR_CONTEXTS.checkIsCoprocessorTxSenderFromContext(contextId, msg.sender);
 
-        /**
-         * @dev Check if the coprocessor transaction sender has already added the ciphertext handle.
-         * Note that a coprocessor transaction sender cannot add the same ciphertext material on
-         * two different host chains.
-         */
+        // Check if the coprocessor transaction sender has already added the ciphertext handle.
         if ($._alreadyAddedCoprocessorTxSenders[ctHandle][msg.sender]) {
             revert CoprocessorAlreadyAdded(ctHandle, msg.sender);
         }
@@ -154,11 +149,9 @@ contract CiphertextCommits is
         // TODO: Re-enable this check once keys are generated through the Gateway
         // KMS_MANAGEMENT.checkCurrentKeyId(keyId);
 
-        /**
-         * @dev The addCiphertextHash is the hash of all received input arguments which means that multiple
-         * Coprocessors can only have a consensus on a ciphertext material with the same information.
-         * This hash is used to track the addition consensus on the received ciphertext material.
-         */
+        // The addCiphertextHash is the hash of all received input arguments which means that multiple
+        // coprocessors can only have a consensus on a ciphertext material with the same information.
+        // This hash is used to track the addition consensus on the received ciphertext material.
         $._addCiphertextHashCounters[addCiphertextHash]++;
 
         $._alreadyAddedCoprocessorTxSenders[ctHandle][msg.sender] = true;
