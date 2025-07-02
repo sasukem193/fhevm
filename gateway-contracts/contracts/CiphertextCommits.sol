@@ -95,8 +95,8 @@ contract CiphertextCommits is
         __Pausable_init();
     }
 
-    /// @notice Reinitializes the contract.
-    function reinitializeV2() external reinitializer(3) {}
+    /// @notice Re-initializes the contract from V1.
+    function reinitializeV2() external reinitializer(REINITIALIZER_VERSION) {}
 
     /// @notice See {ICiphertextCommits-addCiphertextMaterial}.
     function addCiphertextMaterial(

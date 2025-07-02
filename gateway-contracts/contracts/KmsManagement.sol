@@ -144,8 +144,8 @@ contract KmsManagement is
         $._fheParamsInitialized[fheParamsName] = true;
     }
 
-    /// @notice Reinitializes the contract.
-    function reinitializeV2() external reinitializer(3) {}
+    /// @notice Re-initializes the contract from V1.
+    function reinitializeV2() external reinitializer(REINITIALIZER_VERSION) {}
 
     /// @dev Modifier to check if the given FHE params name is initialized
     modifier fheParamsInitialized(string calldata fheParamsName) {

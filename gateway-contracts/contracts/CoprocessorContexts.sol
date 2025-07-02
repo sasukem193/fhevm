@@ -24,6 +24,10 @@ contract CoprocessorContexts is ICoprocessorContexts, Ownable2StepUpgradeable, U
     uint256 private constant MINOR_VERSION = 1;
     uint256 private constant PATCH_VERSION = 0;
 
+    /// Constant used for making sure the version number using in the `reinitializer` modifier is
+    /// identical between `initializeFromEmptyProxy` and the reinitializeVX` method
+    uint64 private constant REINITIALIZER_VERSION = 2;
+
     /**
      * @notice The contract's variable storage struct (@dev see ERC-7201)
      */
@@ -86,7 +90,7 @@ contract CoprocessorContexts is ICoprocessorContexts, Ownable2StepUpgradeable, U
     function initializeFromEmptyProxy(
         uint256 initialFeatureSet,
         Coprocessor[] calldata initialCoprocessors
-    ) public virtual onlyFromEmptyProxy reinitializer(2) {
+    ) public virtual onlyFromEmptyProxy reinitializer(REINITIALIZER_VERSION) {
         __Ownable_init(owner());
         __Pausable_init();
 
